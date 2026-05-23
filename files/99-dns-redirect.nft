@@ -1,0 +1,18 @@
+chain output_dns {
+    type nat hook output priority -100;
+
+    meta skuid "nobody" accept
+    ip protocol udp udp dport 53 redirect to :5553
+    ip protocol tcp tcp dport 53 redirect to :5553
+    ip6 nexthdr udp udp dport 53 redirect to :5553
+    ip6 nexthdr tcp tcp dport 53 redirect to :5553
+}
+
+chain prerouting_dns {
+    type nat hook prerouting priority -100;
+
+    iifname "br-lan" ip protocol udp udp dport 53 dnat to :5553
+    iifname "br-lan" ip protocol tcp tcp dport 53 dnat to :5553
+    iifname "br-lan" ip6 nexthdr udp udp dport 53 redirect to :5553
+    iifname "br-lan" ip6 nexthdr tcp tcp dport 53 redirect to :5553
+}

@@ -1,0 +1,89 @@
+log:
+  # 是否打印请求信息。(请求的来源，域名，类型，应答 rcode，延时等...)
+  queries: false
+  # 是否打印**收到和发送的所有** DNS 数据包。会打印大量信息。调试用。
+  trace_msgs: false
+
+api:
+  addr: "192.168.1.1:6080" # api 监听地址。
+  
+servers:  # 入站
+    # (必需) 协议，支持: udp/tcp/tls/http/fasthttp/https/http3/quic
+    #  http: go 标准库实现的 http/1，h2c 服务端。
+    #  fasthttp: fasthttp 实现的 http/1 服务端，比 go 标准库快很多。
+  - protocol: "udp"
+    listen: "0.0.0.0:5553"
+  - protocol: "tcp"
+    listen: "0.0.0.0:5553" 
+cache: # 缓存。
+  # 内存大小，单位 byte。
+  # 默认: 0 = 无内存缓存。
+  mem_size: 16777216
+  maximum_ttl: 3600
+  optimistic_ttl: 0
+  # redis 缓存。
+  # redis://<user>:<password>@<host>:<port>/<db_number>
+  # redis://<user>:<password>@<host>:<port>?addr=<host2>:<port2>&addr=<host3>:<port3>
+  # unix://<user>:<password>@</path/to/redis.sock>?db=<db_number>
+  # 如果和内存缓存同时启用，则 redis 为二级缓存。先查找内存缓存，如果没有命中，
+  # 则查找 redis，如果 redis 缓存命中，则会更新内存缓存。
+  # 自带 health (ping) check，如果 redis 服务端失联会自动禁用 redis 缓存，
+  # 直到重新连接。检查间隔/反应时间为 1s 。
+  redis: ""
+  
+ecs:
+  enabled: true
+  source: outbound
+  outbound_probe_addr: 1.1.1.1:443
+
+bootstrap_dns:
+  addr: https://dns.google/dns-query
+  dial_addr: 8.8.8.8:443
+  timeout: 5
+  strategy: "prefer_ipv6"
+        
+upstreams: # 出站。
+  - tag: "iijdns"
+    addr: "https://public.dns.iij.jp/dns-query"
+    health_check:
+      max_fails: 5
+
+  - tag: "quad9"
+    addr: "https://dns10.quad9.net/dns-query"
+    health_check:
+      max_fails: 5
+
+  - tag: "google"
+    addr: "https://dns.google/dns-query"
+    health_check:
+      max_fails: 5
+
+  - tag: "cloudflare"
+    addr: "https://cloudflare-dns.com/dns-query"
+    health_check:
+      max_fails: 5
+
+load_balancers: # 负载均衡组
+  - tag: "dns-out"
+    method: "random"
+    retry_local_ip: true
+    backends:
+      - tag: "iijdns"
+      - tag: "quad9"
+      - tag: "google"
+      - tag: "cloudflare"
+
+rules:
+  - forward: "dns-out"
+
+middleware:
+  - type: prefer_ipv6
+
+  - type: fastest_ip
+    cache_size: 4096
+    cache_ttl: 3600
+    failure_ttl: 60
+    probe_timeout: 300
+    max_concurrent: 16
+    ports: [443, 80, 8080]
+    ipv6_weight: 1.25
