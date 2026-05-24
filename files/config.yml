@@ -6,15 +6,15 @@ log:
 
 api:
   addr: "192.168.1.1:6080" # api 监听地址。
-  
-servers:  # 入站
-    # (必需) 协议，支持: udp/tcp/tls/http/fasthttp/https/http3/quic
-    #  http: go 标准库实现的 http/1，h2c 服务端。
-    #  fasthttp: fasthttp 实现的 http/1 服务端，比 go 标准库快很多。
+
+servers: # 入站
+  # (必需) 协议，支持: udp/tcp/tls/http/fasthttp/https/http3/quic
+  #  http: go 标准库实现的 http/1，h2c 服务端。
+  #  fasthttp: fasthttp 实现的 http/1 服务端，比 go 标准库快很多。
   - protocol: "udp"
     listen: "0.0.0.0:5553"
   - protocol: "tcp"
-    listen: "0.0.0.0:5553" 
+    listen: "0.0.0.0:5553"
 cache: # 缓存。
   # 内存大小，单位 byte。
   # 默认: 0 = 无内存缓存。
@@ -30,7 +30,7 @@ cache: # 缓存。
   # 自带 health (ping) check，如果 redis 服务端失联会自动禁用 redis 缓存，
   # 直到重新连接。检查间隔/反应时间为 1s 。
   redis: ""
-  
+
 ecs:
   enabled: true
   source: outbound
@@ -41,7 +41,7 @@ bootstrap_dns:
   dial_addr: 8.8.8.8:443
   timeout: 5
   strategy: "prefer_ipv6"
-        
+
 upstreams: # 出站。
   - tag: "iijdns"
     addr: "https://public.dns.iij.jp/dns-query"
@@ -83,7 +83,10 @@ middleware:
     cache_size: 4096
     cache_ttl: 3600
     failure_ttl: 60
-    probe_timeout: 300
+    probe_timeout: 200
     max_concurrent: 16
-    ports: [443, 80, 8080]
+    speed-check-mode:
+      - ping
+      - tcp:443
+      - tcp:80
     ipv6_weight: 1.25
