@@ -78,15 +78,7 @@ rules:
 
 middleware:
   - type: prefer_ipv6
-
+    probe_timeout: 1500
   - type: fastest_ip
-    cache_size: 4096
-    cache_ttl: 3600
-    failure_ttl: 60
-    probe_timeout: 200
-    max_concurrent: 16
-    speed-check-mode:
-      - ping
-      - tcp:443
-      - tcp:80
-    ipv6_weight: 1.25
+    speed-check-mode: [tcp:443]
+    probe_interval: 600
