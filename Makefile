@@ -1,12 +1,13 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=mosproxy
-PKG_RELEASE:=2
+PKG_RELEASE:=1
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=https://github.com/JohnsonRan/mosproxy.git
-PKG_SOURCE_DATE:=2026-06-28
-PKG_SOURCE_VERSION:=2c98c0c74041e0001753a7297914d8012d4ec725
+PKG_SOURCE_BRANCH:=dev
+PKG_SOURCE_VERSION:=$(shell git ls-remote $(PKG_SOURCE_URL) $(PKG_SOURCE_BRANCH) | cut -f1)
+PKG_SOURCE_DATE:=$(shell date +%Y-%m-%d)
 PKG_MIRROR_HASH:=skip
 PKG_VERSION:=$(subst -,.,$(PKG_SOURCE_DATE))
 
